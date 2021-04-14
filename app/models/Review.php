@@ -6,78 +6,209 @@
 
         public function __construct()
         {
+            //Initiating new dummyDatabse
             $this->db = new DummyDatabase;
 
-            // var_dump ($this->db);
-
-    
-
-            // var_dump ($this->getReviews());
         }
 
+        //taking the reviews from the DB
         public function getReviews(){
             $result = $this->db->jsonRead();
-            // var_dump($result);
             return $result;
         }
 
 
+        //filtering the data according to user's parameters
         public function filterResult($data){
             $dummydbData= $this->getReviews();
-            $counter='';
-            $arrayForSort= array();
-            $resultText=[];
-            $resultDate=[];
-            $resultRating=[];
+            $keysT = array_column($dummydbData, 'reviewText');
+            $keysR = array_column($dummydbData, 'rating');
+            $keysD = array_column($dummydbData, 'reviewCreatedOnDate');
 
-            // rsort($dummydbData);
-            // var_dump($dummydbData);
 
             if($data['text'] === 'Yes'){
-            // array_multisort($dummydbData, array('reviewText'=>SORT_DESC));
+                
+                   if($data['rating'] === 'Higher First'){
+
+                        if($data['date'] === 'Newest First'){
+                            
+                            
+                            array_multisort( $keysT, SORT_DESC, $keysR, SORT_DESC, $keysD, SORT_DESC, $dummydbData);
+                            $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                           
+                            return $newDbArray;
+
+                        }
+                        else{
+                            array_multisort( $keysT, SORT_DESC, $keysR, SORT_DESC, $keysD, SORT_ASC, $dummydbData);
+                            $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                            
+                            return $newDbArray;
+                        }
+
+                   }
+                   else{
+
+                        if($data['date'] === 'Newest First'){
+                                
+                            
+                            array_multisort($keysT, SORT_ASC, $keysR, SORT_ASC, $keysD, SORT_DESC,  $dummydbData);
+                            $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                            $dateValues=[];
+
+                            foreach($newDbArray as $key => $val) {
+                                // array_push($dateValues, $val['reviewCreatedOnTime']);
+                                if($val['reviewText'] == "") {
+                                    $item = $newDbArray[$key];
+                                    unset($newDbArray[$key]);
+                                    array_push($newDbArray, $item); 
+                                    
+                                }
+                                // if($val['reviewCreatedOnTime'] != max($dateValues)){
+                                //     $item = $newDbArray[$key];
+                                //     // var_dump($newDbArray[$key]);
+                                //     unset($newDbArray[$key]);
+                                // }
+                                
+                            }
+
+                            foreach($newDbArray as $key => $val) {
+                                array_push($dateValues, $val['reviewCreatedOnTime']);
+                                if($val['reviewCreatedOnTime'] != max($dateValues) && !empty($val['reviewText'])){
+                                    $item = $newDbArray[$key];
+                                    // var_dump($newDbArray[$key]);
+                                    unset($newDbArray[$key]);
+                                    
+                                }
+                            }
+
+
+
+                            
+                            return $newDbArray;
+
+                        }
+                        //oldest date
+                        else{
+                            array_multisort($keysT, SORT_ASC, $keysR, SORT_ASC, $keysD, SORT_ASC, $dummydbData);
+                            $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                            $dateValues=[];
+                            foreach($newDbArray as $key => $val) {
+                                // array_push($dateValues, $val['reviewCreatedOnTime']);
+                                if($val['reviewText'] == "") {
+                                    $item = $newDbArray[$key];
+                                    unset($newDbArray[$key]);
+                                    array_push($newDbArray, $item); 
+                                    
+                                }
+                            }
+
+                            //BUG!!! does not iterate the firt 3 elements from the array
+
+                            // foreach($newDbArray as $key => $val) {
+                                
+                            //     array_push($dateValues, $val['reviewCreatedOnTime']);
+                            //     var_dump($dateValues);
+                            //     if($val['reviewCreatedOnTime'] > max($dateValues) && !empty($val['reviewText'])){
+                                   
+                            //         var_dump($val['reviewText'],$val['reviewCreatedOnTime'], max($dateValues));
+                            //         $item = $newDbArray[$key];
+                            //         // var_dump($newDbArray[$key]);
+                            //         unset($newDbArray[$key]);
+                                    
+                            //     }
+
+                            // }
+
+
+                            return $newDbArray;
+                        }
+
+                   }
             
-            //    foreach($dummydbData as $key=>$value){
-                   
-                   
-                    
-                    $keysT = array_column($dummydbData, 'reviewText');
-                    $keysD = array_column($dummydbData, 'reviewCreatedOnDate');
+            }
+            else{
 
-                    
+                if($data['rating'] === 'Higher First'){
 
-                    array_multisort( $keysT, SORT_DESC, $keysD, SORT_ASC, $dummydbData);
-                    
-                    // array_multisort($keysT, SORT_DESC, $dummydbData,
-                    //                 );
-                    
-                    // $resultText=array_multisort($dummydbData, array('reviewText'=>SORT_DESC, 'reviewCreatedOnDate'=>SORT_DESC));
-                   
-                   
-                   
-            //    }
-
-            //    var_dump($sort);
-                    
                     if($data['date'] === 'Newest First'){
-                        // $textArr = array_multisort($keysT, SORT_ASC, $dummydbData);
-                        //         array_multisort($keysD, SORT_DESC, $textArr);
-                        // var_dump($textArr);
-                        // array_multisort();
+                        
+                        
+                        array_multisort($keysR, SORT_DESC, $keysD, SORT_DESC, $dummydbData);
+                        $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                        
+                        return $newDbArray;
+
                     }
-                    elseif($data['date'] === 'Oldest First'){
-                        $keys = array_column($dummydbData, 'reviewCreatedOnDate');
-                        array_multisort($keys, SORT_ASC, $dummydbData);
+                    else{
+                        array_multisort($keysR, SORT_DESC, $keysD, SORT_ASC, $dummydbData);
+                        $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                        
+                        return $newDbArray;
                     }
+
+               }
+               else{
+
+                    if($data['date'] === 'Newest First'){
+                        array_multisort($keysR, SORT_ASC, $keysD, SORT_DESC, $dummydbData);
+                        $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                        
+                        return $newDbArray;
+
+                    }
+                    else{
+                        array_multisort($keysR, SORT_ASC, $keysD, SORT_ASC, $dummydbData);
+                        $newDbArray =$this->minimumRate($dummydbData, $data['minimumRating']);
+                        
+                        return $newDbArray;
+                    }
+
+               }
+
+
+            }
             
-            //    var_dump(array_column($dummydbData, 'reviewCreatedOnDate'));
-            }
-            // rsort($result);
-            foreach($dummydbData as $v){
-                var_dump($v['reviewText'],$v['reviewCreatedOnDate']);
-            }
-            // var_dump($dummydbData);
         }
 
-    
+        //helper function for minimum rating filter
+
+        private function minimumRate($array, $minRate){
+            switch($minRate){
+                case "1":
+                    $new = array_filter($array, function ($var) {
+                        return ($var['rating'] >= "1");
+                    });
+                    return $new;
+                break;
+                case '2':
+                    $new = array_filter($array, function ($var) {
+                        return ($var['rating'] >= '2');
+                    });
+                    return $new;
+                break;
+                case '3':
+                    $new = array_filter($array, function ($var) {
+                        return ($var['rating'] >= '3');
+                    });
+                    return $new;
+                break;
+                case '4':
+                    $new = array_filter($array, function ($var) {
+                        return ($var['rating'] >= '4');
+                    });
+                    return $new;
+                break;
+                case '5':
+                    $new = array_filter($array, function ($var) {
+                         return ($var['rating'] == '5');
+                    });
+                    return $new;
+                break;   
+                default:
+                    return "There is no such rating";
+                    
+            }
+        }
         
     }

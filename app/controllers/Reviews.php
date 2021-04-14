@@ -2,7 +2,7 @@
     class Reviews extends Controller
     {
         private $userModel;
-
+        
         public function ___construct()
         {
             // $this->userModel=$this->model('Review');
@@ -31,12 +31,13 @@
                 'minimumRating'=>$_POST['minimumRating']
                 ];
 
-                $this->userModel->filterResult($data);
+               $_SESSION = $this->userModel->filterResult($data);
 
-                // var_dump($this->userModel);
+               session_unset();
+                
 
             }
-
+            // var_dump("SESSION ", $_SESSION);
             $this->view('filters/filterForm', $data);
 
         
